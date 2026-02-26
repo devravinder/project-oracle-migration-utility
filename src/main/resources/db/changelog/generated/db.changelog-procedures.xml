@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <!-- TYPE: T_ADDRESS -->
+    <changeSet id="procs-0001" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/type_t_address.sql"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>
+
+    <!-- FUNCTION: FN_GET_FULL_NAME -->
+    <changeSet id="procs-0002" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/function_fn_get_full_name.sql"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>
+
+    <!-- FUNCTION: FN_GET_USER_TOTAL_SPEND -->
+    <changeSet id="procs-0003" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/function_fn_get_user_total_spend.sql"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>
+
+    <!-- PROCEDURE: SP_CREATE_USER -->
+    <changeSet id="procs-0004" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/procedure_sp_create_user.sql"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>
+
+    <!-- PROCEDURE: SP_DEACTIVATE_USER -->
+    <changeSet id="procs-0005" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/procedure_sp_deactivate_user.sql"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>
+
+    <!-- PROCEDURE: SP_PLACE_ORDER -->
+    <changeSet id="procs-0006" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/procedure_sp_place_order.sql"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>
+
+    <!-- TRIGGER: TRG_USERS_AUDIT -->
+    <changeSet id="procs-0007" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/trigger_trg_users_audit.sql"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

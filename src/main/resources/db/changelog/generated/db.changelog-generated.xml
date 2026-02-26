@@ -1,0 +1,450 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="ravinder (generated)" id="1772091772964-12">
+        <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_AUDIT_LOG" startValue="5"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-13">
+        <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_ORDERS" startValue="5"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-14">
+        <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_PRODUCTS" startValue="5"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-15">
+        <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_ROLES" startValue="5"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-16">
+        <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_USERS" startValue="5"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-1">
+        <createTable tableName="ORDERS">
+            <column defaultValueComputed="SEQ_ORDERS.NEXTVAL" name="ORDER_ID" type="NUMBER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_C008341"/>
+            </column>
+            <column name="USER_ID" type="NUMBER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PRODUCT_ID" type="NUMBER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="QUANTITY" type="NUMBER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UNIT_PRICE" type="NUMBER(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="GENERATED ALWAYS AS (&quot;QUANTITY&quot;*&quot;UNIT_PRICE&quot;)" name="TOTAL_AMOUNT" type="NUMBER(10, 2)"/>
+            <column defaultValue="PENDING" name="STATUS" type="VARCHAR2(20 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="SYSTIMESTAMP" name="ORDER_DATE" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-3">
+        <createTable tableName="ROLES">
+            <column defaultValueComputed="SEQ_ROLES.NEXTVAL" name="ROLE_ID" type="NUMBER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_C008305"/>
+            </column>
+            <column name="ROLE_NAME" type="VARCHAR2(50 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" type="VARCHAR2(200 BYTE)"/>
+            <column defaultValueNumeric="1" name="IS_ACTIVE" type="NUMBER(1, 0)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="SYSTIMESTAMP" name="CREATED_AT" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-5">
+        <createTable tableName="USERS">
+            <column defaultValueComputed="SEQ_USERS.NEXTVAL" name="USER_ID" type="NUMBER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_C008315"/>
+            </column>
+            <column name="USERNAME" type="VARCHAR2(100 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EMAIL" type="VARCHAR2(255 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PASSWORD_HASH" type="VARCHAR2(255 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="FIRST_NAME" type="VARCHAR2(100 BYTE)"/>
+            <column name="LAST_NAME" type="VARCHAR2(100 BYTE)"/>
+            <column name="ROLE_ID" type="NUMBER">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueNumeric="1" name="IS_ACTIVE" type="NUMBER(1, 0)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_LOGIN" type="TIMESTAMP(6)"/>
+            <column defaultValueComputed="SYSTIMESTAMP" name="CREATED_AT" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="SYSTIMESTAMP" name="UPDATED_AT" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-7">
+        <createTable tableName="PRODUCTS">
+            <column defaultValueComputed="SEQ_PRODUCTS.NEXTVAL" name="PRODUCT_ID" type="NUMBER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_C008332"/>
+            </column>
+            <column name="PRODUCT_NAME" type="VARCHAR2(200 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" type="VARCHAR2(1000 BYTE)"/>
+            <column name="PRICE" type="NUMBER(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueNumeric="0" name="STOCK_QTY" type="NUMBER">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueNumeric="1" name="IS_ACTIVE" type="NUMBER(1, 0)">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="SYSTIMESTAMP" name="CREATED_AT" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-9">
+        <createTable tableName="AUDIT_LOG">
+            <column defaultValueComputed="SEQ_AUDIT_LOG.NEXTVAL" name="LOG_ID" type="NUMBER">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="SYS_C008323"/>
+            </column>
+            <column name="TABLE_NAME" type="VARCHAR2(100 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="OPERATION" type="VARCHAR2(10 BYTE)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="RECORD_ID" type="NUMBER"/>
+            <column name="OLD_VALUES" type="CLOB"/>
+            <column name="NEW_VALUES" type="CLOB"/>
+            <column name="CHANGED_BY" type="VARCHAR2(100 BYTE)"/>
+            <column defaultValueComputed="SYSTIMESTAMP" name="CHANGED_AT" type="TIMESTAMP(6)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-11">
+        <createView fullDefinition="true" viewName="VW_USER_ORDER_SUMMARY">CREATE OR REPLACE FORCE VIEW "VW_USER_ORDER_SUMMARY" ("USER_ID", "USERNAME", "EMAIL", "ROLE_NAME", "TOTAL_ORDERS", "TOTAL_SPENT", "LAST_ORDER_DATE") AS SELECT
+        U.USER_ID,
+        U.USERNAME,
+        U.EMAIL,
+        R.ROLE_NAME,
+        COUNT(O.ORDER_ID)   AS TOTAL_ORDERS,
+        SUM(O.TOTAL_AMOUNT) AS TOTAL_SPENT,
+        MAX(O.ORDER_DATE)   AS LAST_ORDER_DATE
+    FROM USERS U
+    JOIN ROLES  R ON R.ROLE_ID = U.ROLE_ID
+    LEFT JOIN ORDERS O ON O.USER_ID = U.USER_ID
+    GROUP BY U.USER_ID, U.USERNAME, U.EMAIL, R.ROLE_NAME</createView>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-17">
+        <createIndex indexName="UK_EMAIL" tableName="USERS" unique="true">
+            <column name="EMAIL"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-19">
+        <createIndex indexName="UK_ROLE_NAME" tableName="ROLES" unique="true">
+            <column name="ROLE_NAME"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-21">
+        <createIndex indexName="UK_USERNAME" tableName="USERS" unique="true">
+            <column name="USERNAME"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-23">
+        <createIndex indexName="IDX_AUDIT_TABLE" tableName="AUDIT_LOG">
+            <column name="TABLE_NAME"/>
+            <column defaultValueComputed="SYSTIMESTAMP" name="CHANGED_AT"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-24">
+        <createIndex indexName="IDX_ORDERS_PRODUCT" tableName="ORDERS">
+            <column name="PRODUCT_ID"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-25">
+        <createIndex indexName="IDX_ORDERS_STATUS" tableName="ORDERS">
+            <column name="STATUS"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-26">
+        <createIndex indexName="IDX_ORDERS_USER" tableName="ORDERS">
+            <column name="USER_ID"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-27">
+        <createIndex indexName="IDX_USERS_ACTIVE" tableName="USERS">
+            <column defaultValueNumeric="1" name="IS_ACTIVE"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-28">
+        <createIndex indexName="IDX_USERS_ROLE" tableName="USERS">
+            <column name="ROLE_ID"/>
+        </createIndex>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-18">
+        <addUniqueConstraint columnNames="EMAIL" constraintName="UK_EMAIL" forIndexName="UK_EMAIL" tableName="USERS"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-20">
+        <addUniqueConstraint columnNames="ROLE_NAME" constraintName="UK_ROLE_NAME" forIndexName="UK_ROLE_NAME" tableName="ROLES"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-22">
+        <addUniqueConstraint columnNames="USERNAME" constraintName="UK_USERNAME" forIndexName="UK_USERNAME" tableName="USERS"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-29">
+        <addForeignKeyConstraint baseColumnNames="PRODUCT_ID" baseTableName="ORDERS" constraintName="FK_ORDER_PRODUCT" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="PRODUCT_ID" referencedTableName="PRODUCTS" validate="true"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-30">
+        <addForeignKeyConstraint baseColumnNames="USER_ID" baseTableName="ORDERS" constraintName="FK_ORDER_USER" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="USER_ID" referencedTableName="USERS" validate="true"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-31">
+        <addForeignKeyConstraint baseColumnNames="ROLE_ID" baseTableName="USERS" constraintName="FK_USER_ROLE" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="ROLE_ID" referencedTableName="ROLES" validate="true"/>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-2">
+        <insert tableName="ORDERS">
+            <column name="ORDER_ID" valueNumeric="1"/>
+            <column name="USER_ID" valueNumeric="2"/>
+            <column name="PRODUCT_ID" valueNumeric="1"/>
+            <column name="QUANTITY" valueNumeric="1"/>
+            <column name="UNIT_PRICE" valueNumeric="1299.99"/>
+            <column name="TOTAL_AMOUNT" valueNumeric="1299.99"/>
+            <column name="STATUS" value="DELIVERED"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T07:41:41.50161"/>
+        </insert>
+        <insert tableName="ORDERS">
+            <column name="ORDER_ID" valueNumeric="2"/>
+            <column name="USER_ID" valueNumeric="2"/>
+            <column name="PRODUCT_ID" valueNumeric="2"/>
+            <column name="QUANTITY" valueNumeric="2"/>
+            <column name="UNIT_PRICE" valueNumeric="29.99"/>
+            <column name="TOTAL_AMOUNT" valueNumeric="59.98"/>
+            <column name="STATUS" value="SHIPPED"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T07:41:41.509113"/>
+        </insert>
+        <insert tableName="ORDERS">
+            <column name="ORDER_ID" valueNumeric="3"/>
+            <column name="USER_ID" valueNumeric="3"/>
+            <column name="PRODUCT_ID" valueNumeric="3"/>
+            <column name="QUANTITY" valueNumeric="1"/>
+            <column name="UNIT_PRICE" valueNumeric="49.99"/>
+            <column name="TOTAL_AMOUNT" valueNumeric="49.99"/>
+            <column name="STATUS" value="PENDING"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T07:41:41.515073"/>
+        </insert>
+        <insert tableName="ORDERS">
+            <column name="ORDER_ID" valueNumeric="4"/>
+            <column name="USER_ID" valueNumeric="4"/>
+            <column name="PRODUCT_ID" valueNumeric="4"/>
+            <column name="QUANTITY" valueNumeric="2"/>
+            <column name="UNIT_PRICE" valueNumeric="399.99"/>
+            <column name="TOTAL_AMOUNT" valueNumeric="799.98"/>
+            <column name="STATUS" value="CONFIRMED"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T07:41:41.521139"/>
+        </insert>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-4">
+        <insert tableName="ROLES">
+            <column name="ROLE_ID" valueNumeric="1"/>
+            <column name="ROLE_NAME" value="ADMIN"/>
+            <column name="DESCRIPTION" value="Full system access"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.356731"/>
+        </insert>
+        <insert tableName="ROLES">
+            <column name="ROLE_ID" valueNumeric="2"/>
+            <column name="ROLE_NAME" value="USER"/>
+            <column name="DESCRIPTION" value="Standard user access"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.362565"/>
+        </insert>
+        <insert tableName="ROLES">
+            <column name="ROLE_ID" valueNumeric="3"/>
+            <column name="ROLE_NAME" value="MANAGER"/>
+            <column name="DESCRIPTION" value="Manager level access"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.366563"/>
+        </insert>
+        <insert tableName="ROLES">
+            <column name="ROLE_ID" valueNumeric="4"/>
+            <column name="ROLE_NAME" value="GUEST"/>
+            <column name="DESCRIPTION" value="Inactive guest role"/>
+            <column name="IS_ACTIVE" valueNumeric="0"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.370485"/>
+        </insert>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-6">
+        <insert tableName="USERS">
+            <column name="USER_ID" valueNumeric="1"/>
+            <column name="USERNAME" value="admin"/>
+            <column name="EMAIL" value="admin@example.com"/>
+            <column name="PASSWORD_HASH" value="$2a$10$dummyHashForDevOnly.admin000"/>
+            <column name="FIRST_NAME" value="Alice"/>
+            <column name="LAST_NAME" value="Admin"/>
+            <column name="ROLE_ID" valueNumeric="1"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="LAST_LOGIN"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.395717"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T07:41:40.395717"/>
+        </insert>
+        <insert tableName="USERS">
+            <column name="USER_ID" valueNumeric="2"/>
+            <column name="USERNAME" value="jdoe"/>
+            <column name="EMAIL" value="jdoe@example.com"/>
+            <column name="PASSWORD_HASH" value="$2a$10$dummyHashForDevOnly.jdoe000"/>
+            <column name="FIRST_NAME" value="John"/>
+            <column name="LAST_NAME" value="Doe"/>
+            <column name="ROLE_ID" valueNumeric="2"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="LAST_LOGIN"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.504942"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T07:41:40.504942"/>
+        </insert>
+        <insert tableName="USERS">
+            <column name="USER_ID" valueNumeric="3"/>
+            <column name="USERNAME" value="jsmith"/>
+            <column name="EMAIL" value="jsmith@example.com"/>
+            <column name="PASSWORD_HASH" value="$2a$10$dummyHashForDevOnly.jsmith00"/>
+            <column name="FIRST_NAME" value="Jane"/>
+            <column name="LAST_NAME" value="Smith"/>
+            <column name="ROLE_ID" valueNumeric="2"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="LAST_LOGIN"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.512275"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T07:41:40.512275"/>
+        </insert>
+        <insert tableName="USERS">
+            <column name="USER_ID" valueNumeric="4"/>
+            <column name="USERNAME" value="manager1"/>
+            <column name="EMAIL" value="manager@example.com"/>
+            <column name="PASSWORD_HASH" value="$2a$10$dummyHashForDevOnly.mgr0000"/>
+            <column name="FIRST_NAME" value="Bob"/>
+            <column name="LAST_NAME" value="Manager"/>
+            <column name="ROLE_ID" valueNumeric="3"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="LAST_LOGIN"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:40.519384"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T07:41:40.519384"/>
+        </insert>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-8">
+        <insert tableName="PRODUCTS">
+            <column name="PRODUCT_ID" valueNumeric="1"/>
+            <column name="PRODUCT_NAME" value="Laptop Pro 15"/>
+            <column name="DESCRIPTION" value="High performance laptop"/>
+            <column name="PRICE" valueNumeric="1299.99"/>
+            <column name="STOCK_QTY" valueNumeric="50"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:41.274921"/>
+        </insert>
+        <insert tableName="PRODUCTS">
+            <column name="PRODUCT_ID" valueNumeric="2"/>
+            <column name="PRODUCT_NAME" value="Wireless Mouse"/>
+            <column name="DESCRIPTION" value="Ergonomic wireless mouse"/>
+            <column name="PRICE" valueNumeric="29.99"/>
+            <column name="STOCK_QTY" valueNumeric="200"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:41.443603"/>
+        </insert>
+        <insert tableName="PRODUCTS">
+            <column name="PRODUCT_ID" valueNumeric="3"/>
+            <column name="PRODUCT_NAME" value="USB-C Hub"/>
+            <column name="DESCRIPTION" value="7-in-1 USB-C hub"/>
+            <column name="PRICE" valueNumeric="49.99"/>
+            <column name="STOCK_QTY" valueNumeric="150"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:41.449374"/>
+        </insert>
+        <insert tableName="PRODUCTS">
+            <column name="PRODUCT_ID" valueNumeric="4"/>
+            <column name="PRODUCT_NAME" value="Monitor 27&quot;"/>
+            <column name="DESCRIPTION" value="4K IPS display"/>
+            <column name="PRICE" valueNumeric="399.99"/>
+            <column name="STOCK_QTY" valueNumeric="30"/>
+            <column name="IS_ACTIVE" valueNumeric="1"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T07:41:41.455036"/>
+        </insert>
+    </changeSet>
+
+<changeSet author="ravinder (generated)" id="1772091772964-10">
+        <insert tableName="AUDIT_LOG">
+            <column name="LOG_ID" valueNumeric="1"/>
+            <column name="TABLE_NAME" value="USERS"/>
+            <column name="OPERATION" value="INSERT"/>
+            <column name="RECORD_ID" valueNumeric="1"/>
+            <column name="OLD_VALUES"/>
+            <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;admin&quot;,&quot;email&quot;:&quot;admin@example.com&quot;,&quot;role_id&quot;:1}"/>
+            <column name="CHANGED_BY" value="SYS"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T07:41:40.496779"/>
+        </insert>
+        <insert tableName="AUDIT_LOG">
+            <column name="LOG_ID" valueNumeric="2"/>
+            <column name="TABLE_NAME" value="USERS"/>
+            <column name="OPERATION" value="INSERT"/>
+            <column name="RECORD_ID" valueNumeric="2"/>
+            <column name="OLD_VALUES"/>
+            <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;jdoe&quot;,&quot;email&quot;:&quot;jdoe@example.com&quot;,&quot;role_id&quot;:2}"/>
+            <column name="CHANGED_BY" value="SYS"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T07:41:40.506159"/>
+        </insert>
+        <insert tableName="AUDIT_LOG">
+            <column name="LOG_ID" valueNumeric="3"/>
+            <column name="TABLE_NAME" value="USERS"/>
+            <column name="OPERATION" value="INSERT"/>
+            <column name="RECORD_ID" valueNumeric="3"/>
+            <column name="OLD_VALUES"/>
+            <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;jsmith&quot;,&quot;email&quot;:&quot;jsmith@example.com&quot;,&quot;role_id&quot;:2}"/>
+            <column name="CHANGED_BY" value="SYS"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T07:41:40.513307"/>
+        </insert>
+        <insert tableName="AUDIT_LOG">
+            <column name="LOG_ID" valueNumeric="4"/>
+            <column name="TABLE_NAME" value="USERS"/>
+            <column name="OPERATION" value="INSERT"/>
+            <column name="RECORD_ID" valueNumeric="4"/>
+            <column name="OLD_VALUES"/>
+            <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;manager1&quot;,&quot;email&quot;:&quot;manager@example.com&quot;,&quot;role_id&quot;:3}"/>
+            <column name="CHANGED_BY" value="SYS"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T07:41:40.520404"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

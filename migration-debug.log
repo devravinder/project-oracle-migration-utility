@@ -1,0 +1,114 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/home/ravinder/.gradle/wrapper/dists/gradle-9.2.0-bin/11i5gvueggl8a5cioxuftxrik/gradle-9.2.0/lib/native-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+Initialized native services in: /home/ravinder/.gradle/native
+Initialized jansi services in: /home/ravinder/.gradle/native
+
+Welcome to Gradle 9.2.0!
+
+Here are the highlights of this release:
+ - Windows ARM support
+ - Improved publishing APIs
+ - Better guidance for dependency verification failures
+
+For more details see https://docs.gradle.org/9.2.0/release-notes.html
+
+Found daemon DaemonInfo{pid=34009, address=[a3e70155-5434-47a1-a42e-3f0defcef6fd port:44523, addresses:[/127.0.0.1]], state=Idle, lastBusy=1772085488426, context=DefaultDaemonContext[uid=ef5b70c2-8219-445b-a21d-0113bc5a4ea0,javaHome=/home/ravinder/.sdkman/candidates/java/17.0.2-tem,javaVersion=17,javaVendor=Eclipse Adoptium,daemonRegistryDir=/home/ravinder/.gradle/daemon,pid=34009,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=/home/ravinder/.sdkman/candidates/java/25-amzn (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=384m, -XX:+HeapDumpOnOutOfMemoryError, -Xms256m, -Xmx512m, -Dfile.encoding=UTF-8, -Duser.country=US, -Duser.language=en, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=ef5b70c2-8219-445b-a21d-0113bc5a4ea0,javaHome=/home/ravinder/.sdkman/candidates/java/17.0.2-tem,javaVersion=17,javaVendor=Eclipse Adoptium,daemonRegistryDir=/home/ravinder/.gradle/daemon,pid=34009,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=US,-Duser.language=en,-Duser.variant]
+
+  Looking for a different daemon...
+The client will now receive all logging from the daemon (pid: 32814). The daemon log file: /home/ravinder/.gradle/daemon/9.2.0/daemon-32814.out.log
+Starting 2nd build in daemon [uptime: 1 hrs 26 mins 35.047 secs, performance: 98%, GC rate: 0.00/s, heap usage: 0% of 512 MiB, non-heap usage: 20% of 384 MiB]
+Using 8 worker leases.
+Operational build model parameters: {requiresToolingModels=false, parallelProjectExecution=false, configureOnDemand=false, configurationCache=false, configurationCacheParallelStore=false, configurationCacheParallelLoad=true, isolatedProjects=false, parallelProjectConfiguration=false, intermediateModelCache=false, parallelToolingApiActions=false, invalidateCoupledProjects=false, modelAsProjectDependency=false, resilientModelBuilding=false}
+Invalidating in-memory cache of /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/.gradle/9.2.0/fileHashes/fileHashes.bin
+Invalidating in-memory cache of /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/.gradle/buildOutputCleanup/outputFiles.bin
+Invalidating in-memory cache of /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/.gradle/9.2.0/fileHashes/resourceHashesCache.bin
+Now considering [/home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+Now considering [/home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility] as hierarchies to watch
+File system watching is active
+Invalidating in-memory cache of /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/.gradle/9.2.0/checksums/md5-checksums.bin
+Invalidating in-memory cache of /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/.gradle/9.2.0/checksums/sha1-checksums.bin
+Invalidating in-memory cache of /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/.gradle/9.2.0/checksums/sha256-checksums.bin
+Invalidating in-memory cache of /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/.gradle/9.2.0/checksums/sha512-checksums.bin
+Starting Build
+Settings evaluated using settings file '/home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/settings.gradle'.
+Projects loaded. Root project using build file '/home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/build.gradle'.
+Included projects: [root project 'whs-gradle-liquibase-migration-utility']
+
+> Configure project :
+Evaluating root project 'whs-gradle-liquibase-migration-utility' using build file '/home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/build.gradle'.
+Resolved plugin [id: 'java']
+Resolved plugin [id: 'org.springframework.boot', version: '3.2.0']
+Resolved plugin [id: 'io.spring.dependency-management', version: '1.1.7']
+Resolved plugin [id: 'org.liquibase.gradle', version: '2.2.0']
+Invalidating in-memory cache of /home/ravinder/.gradle/caches/journal-1/file-access.bin
+Invalidating in-memory cache of /home/ravinder/.gradle/caches/9.2.0/fileHashes/fileHashes.bin
+Invalidating in-memory cache of /home/ravinder/.gradle/caches/9.2.0/fileHashes/resourceHashesCache.bin
+Applying dependency management to configuration 'annotationProcessor' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'apiElements' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'archives' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'bootArchives' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'compileClasspath' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'compileOnly' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'default' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'developmentOnly' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'implementation' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'mainSourceElements' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'runtimeClasspath' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'runtimeElements' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'runtimeOnly' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testCompileClasspath' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testCompileOnly' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testImplementation' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'whs-gradle-liquibase-migration-utility'
+Applying dependency management to configuration 'liquibaseRuntime' in project 'whs-gradle-liquibase-migration-utility'
+All projects evaluated.
+Task name matched 'generateChangelogFromDev'
+Selected primary task 'generateChangelogFromDev' from project :
+Tasks to be executed: [task ':generateChangelogFromDev']
+Tasks that were excluded: []
+Resolve mutations for :generateChangelogFromDev (Thread[#155,Execution worker,5,main]) started.
+:generateChangelogFromDev (Thread[#155,Execution worker,5,main]) started.
+
+> Task :generateChangelogFromDev
+Caching disabled for task ':generateChangelogFromDev' because:
+  Build cache is disabled
+Task ':generateChangelogFromDev' is not up-to-date because:
+  Task has not declared any outputs despite executing actions.
+
+╔══════════════════════════════════════════════════════════╗
+║  STEP 1 — Generate Schema Changelog from DEV DB         ║
+╚══════════════════════════════════════════════════════════╝
+  Source  : jdbc:oracle:thin:@//localhost:1522/XEPDB1
+  Schema  : DEV_USER
+  Output  : /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/src/main/resources/db/changelog/generated/db.changelog-generated.xml
+
+
+  ✔ Schema changelog written to:
+    /home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/src/main/resources/db/changelog/generated/db.changelog-generated.xml
+
+  ⚠ Stored procedures/functions are NOT included here.
+    Run STEP 2: ./gradlew extractProcsFromDev
+
+
+[Incubating] Problems report is available at: file:///home/ravinder/Drive/work-spaces/java/intellij-projects/whs-gradle-liquibase-migration-utility/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.2.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+1 actionable task: 1 executed

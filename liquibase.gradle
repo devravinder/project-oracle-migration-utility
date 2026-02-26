@@ -1,0 +1,646 @@
+ext {
+    devUrl      = project.findProperty('dev.db.url')      ?: 'jdbc:oracle:thin:@//localhost:1522/XEPDB1'
+    devUsername = project.findProperty('dev.db.username')  ?: 'DEV_USER'
+    devPassword = project.findProperty('dev.db.password')  ?: 'DEV_PASS'
+    devSchema   = project.findProperty('dev.db.schema')    ?: 'DEV_USER'
+
+    localUrl      = project.findProperty('local.db.url')      ?: 'jdbc:oracle:thin:@//localhost:1521/XEPDB1'
+    localUsername = project.findProperty('local.db.username')  ?: 'LOCAL_USER'
+    localPassword = project.findProperty('local.db.password')  ?: 'LOCAL_PASS'
+    localSchema   = project.findProperty('local.db.schema')    ?: 'LOCAL_USER'
+
+    dbDriver = 'oracle.jdbc.OracleDriver'
+
+    changelogDir       = "$projectDir/src/main/resources/db/changelog"
+    masterChangelog    = "$changelogDir/db.changelog-master.xml"
+    generatedChangelog = "$changelogDir/generated/db.changelog-generated.xml"
+    diffChangelog      = "$changelogDir/diff/db.changelog-diff.xml"
+
+//    resourcesDir   = "$projectDir/src/main/resources"
+//    masterChangelog = "db/changelog/db.changelog-master.xml"   // ← now relative
+}
+
+// ─────────────────────────────────────────────
+// Helper: runs any Liquibase command via JavaExec
+// ─────────────────────────────────────────────
+def runLiquibase(List<String> args) {
+    def liquibaseClasspath = configurations.liquibaseRuntime.asPath
+
+    def cmd = new ArrayList<String>()
+    cmd.add('java')
+    cmd.add('--add-opens=java.base/java.lang=ALL-UNNAMED')
+    cmd.add('--add-opens=java.base/java.nio=ALL-UNNAMED')
+    cmd.add('-cp')
+    cmd.add(liquibaseClasspath)
+    cmd.add('liquibase.integration.commandline.LiquibaseCommandLine')
+    for (String arg : args) {
+        cmd.add(arg)
+    }
+
+    println "  Running Liquibase: ${args.last()}"
+    println ""
+
+    def process = new ProcessBuilder(cmd)
+            .redirectErrorStream(true)
+            .directory(project.projectDir)
+            .start()
+
+    def reader = new BufferedReader(new InputStreamReader(process.inputStream))
+    String line
+    while ((line = reader.readLine()) != null) {
+        println "  [liquibase] $line"
+    }
+
+    def exitCode = process.waitFor()
+    if (exitCode != 0) {
+        throw new GradleException("Liquibase failed with exit code: $exitCode")
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STEP 1 — generateChangelogFromDev
+//
+//  What happens:
+//    1. Connects to DEV DB (port 1522)
+//    2. Scans all tables, views, sequences, indexes,
+//       PKs, FKs, unique constraints, check constraints
+//    3. Writes XML → db/changelog/generated/db.changelog-generated.xml
+//
+//  Run: ./gradlew generateChangelogFromDev
+// ═══════════════════════════════════════════════════════════════
+tasks.register('generateChangelogFromDev') {
+    group       = 'Liquibase - 1. Generate'
+    description = 'STEP 1: Connect to DEV DB and generate XML changelog for all schema objects'
+
+    doFirst {
+        println ""
+        println "╔══════════════════════════════════════════════════════════╗"
+        println "║  STEP 1 — Generate Schema Changelog from DEV DB         ║"
+        println "╚══════════════════════════════════════════════════════════╝"
+        println "  Source : ${project.devUrl}"
+        println "  Schema : ${project.devSchema}"
+        println "  Output : ${project.generatedChangelog}"
+        println ""
+        file("${project.changelogDir}/generated").mkdirs()
+    }
+
+    doLast {
+        runLiquibase([
+                "--url=${project.devUrl}",
+                "--username=${project.devUsername}",
+                "--password=${project.devPassword}",
+                "--driver=${project.dbDriver}",
+                "--defaultSchemaName=${project.devSchema}",
+                "--changelogFile=${project.generatedChangelog}",
+                "--diffTypes=tables,columns,indexes,foreignkeys,primarykeys,uniqueconstraints,sequences,views,data",
+                "--overwriteOutputFile=true",
+                "--logLevel=info",
+                "generateChangelog"
+        ])
+
+        println ""
+        println "  ✔ Schema changelog written to:"
+        println "    ${project.generatedChangelog}"
+        println ""
+        println "  ⚠ Stored procedures/functions are NOT included here."
+        println "    Run STEP 2: ./gradlew extractProcsFromDev"
+        println ""
+    }
+}
+
+
+tasks.register('fixChangelogSchemaRefs') {
+    group       = 'Liquibase - 1. Generate'
+    description = 'Fixes schema refs and removes system-generated constraint names from generated changelog'
+
+    mustRunAfter 'generateChangelogFromDev'
+
+    doLast {
+        def generatedFile = file(project.generatedChangelog)
+
+        if (!generatedFile.exists()) {
+            throw new GradleException("Generated changelog not found: ${project.generatedChangelog}")
+        }
+
+        println ""
+        println "  Fixing generated changelog..."
+
+        def content = generatedFile.text
+
+        // 1. Strip DEV schema sequence refs: DEV_USER.SEQ_X.NEXTVAL → SEQ_X.NEXTVAL
+        content = content.replaceAll(
+                "${project.devSchema.toUpperCase()}\\.(SEQ_[A-Z_]+\\.NEXTVAL)",
+                '$1'
+        )
+
+        // 2. Strip remaining DEV schema prefix: DEV_USER. → (empty)
+        content = content.replaceAll("${project.devSchema.toUpperCase()}\\.", '')
+
+        // 3. Strip quoted DEV schema prefix: "DEV_USER". → (empty)
+        content = content.replaceAll("\"${project.devSchema.toUpperCase()}\"\\.", '')
+
+        // 4. Remove system-generated Oracle constraint names (SYS_C + digits)
+        //    e.g. CONSTRAINT SYS_C008305 PRIMARY KEY → PRIMARY KEY (no name)
+        //    Liquibase XML: constraintName="SYS_C008305" → remove the attribute entirely
+        content = content.replaceAll(/constraintName="SYS_C\d+"/, '')
+
+        // 5. Also strip from raw SQL inside failOnError or preConditions if any
+        content = content.replaceAll(/CONSTRAINT SYS_C\d+\s+/, '')
+
+        generatedFile.text = content
+
+        println "  ✔ Fixed schema refs and removed SYS_C constraint names"
+        println "    ${project.generatedChangelog}"
+        println ""
+    }
+}
+
+
+tasks.register('reorderChangelog') {
+    group       = 'Liquibase - 1. Generate'
+    description = 'Reorders generated changelog: sequences first, then tables, then everything else'
+
+    mustRunAfter 'fixChangelogSchemaRefs'
+
+    doLast {
+        def generatedFile = file(project.generatedChangelog)
+
+        if (!generatedFile.exists()) {
+            throw new GradleException("Generated changelog not found: ${project.generatedChangelog}")
+        }
+
+        println ""
+        println "  Reordering changesets: sequences → tables → views → indexes → constraints..."
+
+        def content = generatedFile.text
+
+        // Parse out individual changeSets
+        def changeSetPattern = ~/(?s)<changeSet[^>]*>.*?<\/changeSet>/
+        def header = content.substring(0, content.indexOf('<changeSet'))
+        def footer = '</databaseChangeLog>'
+
+        def changeSets = []
+        def matcher = changeSetPattern.matcher(content)
+        while (matcher.find()) {
+            changeSets << matcher.group()
+        }
+
+        // Categorize each changeSet by its content
+        def sequences   = changeSets.findAll { it.contains('<createSequence') }
+        def tables      = changeSets.findAll { it.contains('<createTable') }
+        def views       = changeSets.findAll { it.contains('<createView') }
+        def indexes     = changeSets.findAll { it.contains('<createIndex') }
+        def addFKs      = changeSets.findAll { it.contains('<addForeignKeyConstraint') }
+        def addPKs      = changeSets.findAll { it.contains('<addPrimaryKey') }
+        def addUnique   = changeSets.findAll { it.contains('<addUniqueConstraint') }
+        def others      = changeSets.findAll { cs ->
+            !sequences.contains(cs) &&
+                    !tables.contains(cs)    &&
+                    !views.contains(cs)     &&
+                    !indexes.contains(cs)   &&
+                    !addFKs.contains(cs)    &&
+                    !addPKs.contains(cs)    &&
+                    !addUnique.contains(cs)
+        }
+
+        // Rebuild in correct order
+        def ordered = sequences + tables + views + indexes + addPKs + addUnique + addFKs + others
+
+        def newContent = header + ordered.join('\n\n') + '\n\n' + footer
+
+        generatedFile.text = newContent
+
+        println "  ✔ Reordered: ${sequences.size()} sequences, ${tables.size()} tables, " +
+                "${views.size()} views, ${indexes.size()} indexes, " +
+                "${addFKs.size()} FKs, ${others.size()} others"
+        println ""
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STEP 2 — extractProcsFromDev
+//
+//  What happens:
+//    1. Raw JDBC connection to DEV DB
+//    2. Queries ALL_OBJECTS for TYPE, FUNCTION, PROCEDURE,
+//       PACKAGE, PACKAGE BODY, TRIGGER in devSchema
+//    3. Calls DBMS_METADATA.GET_DDL for each object
+//    4. Strips schema prefix (makes DDL portable)
+//    5. Writes → db/changelog/procedures/<type>_<name>.sql
+//    6. Generates db.changelog-procedures.xml (runOnChange=true)
+//
+//  Run: ./gradlew extractProcsFromDev
+// ═══════════════════════════════════════════════════════════════
+tasks.register('extractProcsFromDev') {
+    group       = 'Liquibase - 1. Generate'
+    description = 'STEP 2: Extract stored procedures/functions/triggers from DEV DB via JDBC + DBMS_METADATA'
+
+    mustRunAfter 'generateChangelogFromDev'
+
+    doFirst {
+        println ""
+        println "╔══════════════════════════════════════════════════════════╗"
+        println "║  STEP 2 — Extract Stored Procedures from DEV DB         ║"
+        println "╚══════════════════════════════════════════════════════════╝"
+        println "  Source : ${project.devUrl}"
+        println "  Schema : ${project.devSchema}"
+        println "  Output : ${project.changelogDir}/procedures/"
+        println ""
+    }
+
+    doLast {
+        def outputDir = file("${project.changelogDir}/procedures")
+        outputDir.mkdirs()
+
+        def urls           = configurations.liquibaseRuntime.collect { it.toURI().toURL() }
+        def urlClassLoader = new URLClassLoader(urls.toArray(new URL[0]) as URL[], Thread.currentThread().contextClassLoader)
+        def driverClass    = Class.forName('oracle.jdbc.OracleDriver', true, urlClassLoader)
+
+        def props = new Properties()
+        props.setProperty('user',     project.devUsername)
+        props.setProperty('password', project.devPassword)
+
+        println "  Connecting to DEV DB..."
+        def conn = driverClass.getDeclaredConstructor().newInstance().connect(project.devUrl, props)
+        println "  Connected ✔"
+        println ""
+
+        try {
+            def objectTypes = ['TYPE', 'FUNCTION', 'PROCEDURE', 'PACKAGE', 'PACKAGE BODY', 'TRIGGER']
+            def allSqlFiles = []
+
+            objectTypes.each { objType ->
+                println "  Scanning [$objType]..."
+                def stmt = conn.prepareStatement("""
+                    SELECT OBJECT_NAME
+                    FROM ALL_OBJECTS
+                    WHERE OBJECT_TYPE = ?
+                    AND OWNER = UPPER(?)
+                    ORDER BY OBJECT_NAME
+                """)
+                stmt.setString(1, objType)
+                stmt.setString(2, project.devSchema)
+                def rs = stmt.executeQuery()
+
+                int count = 0
+                while (rs.next()) {
+                    def objName = rs.getString('OBJECT_NAME')
+                    def ddlStmt = conn.prepareStatement(
+                            "SELECT DBMS_METADATA.GET_DDL(?, ?, UPPER(?)) AS DDL_TEXT FROM DUAL"
+                    )
+                    ddlStmt.setString(1, objType.replace(' ', '_'))
+                    ddlStmt.setString(2, objName)
+                    ddlStmt.setString(3, project.devSchema)
+
+                    try {
+                        def ddlRs = ddlStmt.executeQuery()
+                        if (ddlRs.next()) {
+                            def ddl = ddlRs.getClob('DDL_TEXT')?.characterStream?.text ?: ''
+                            if (ddl) {
+                                ddl = ddl.replaceAll("\"${project.devSchema.toUpperCase()}\"\\.", '')
+                                        .replaceAll("${project.devSchema.toUpperCase()}\\.", '')
+                                        .trim()
+                                def safeType = objType.toLowerCase().replace(' ', '_')
+                                def fileName = "${safeType}_${objName.toLowerCase()}.sql"
+                                new File(outputDir, fileName).text = ddl + "\n/\n"
+                                allSqlFiles << [type: objType, name: objName, file: fileName]
+                                println "    ✔ ${objType.padRight(12)} ${objName}"
+                                count++
+                            }
+                        }
+                        ddlRs.close()
+                    } catch (Exception ex) {
+                        println "    ⚠ Could not extract [$objType] $objName: ${ex.message}"
+                    }
+                    ddlStmt.close()
+                }
+                rs.close()
+                stmt.close()
+                println "    Total: $count"
+                println ""
+            }
+
+            buildProceduresChangelog(allSqlFiles, project.changelogDir)
+            println "  ✔ Procedures changelog written:"
+            println "    ${project.changelogDir}/generated/db.changelog-procedures.xml"
+
+        } finally {
+            conn.close()
+            println "  Connection closed."
+        }
+        println ""
+    }
+}
+
+def buildProceduresChangelog(List sqlFiles, String clDir) {
+    def sb = new StringBuilder()
+    sb << """<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">\n\n"""
+
+    if (sqlFiles.isEmpty()) {
+        sb << "    <!-- No stored procedures/functions found in source schema -->\n"
+    } else {
+        sqlFiles.eachWithIndex { obj, idx ->
+            sb << """    <!-- ${obj.type}: ${obj.name} -->
+    <changeSet id="procs-${String.format('%04d', idx + 1)}" author="liquibase-extract" runOnChange="true">
+        <sqlFile path="db/changelog/procedures/${obj.file}"
+                 relativeToChangelogFile="false"
+                 splitStatements="false"
+                 endDelimiter="/"
+                 stripComments="false"/>
+        <rollback/>
+    </changeSet>\n\n"""
+        }
+    }
+    sb << "</databaseChangeLog>\n"
+    file("$clDir/generated/db.changelog-procedures.xml").text = sb.toString()
+}
+
+
+tasks.register('createMasterChangelog') {
+    group       = 'Liquibase - 1. Generate'
+    description = 'Creates db.changelog-master.xml if it does not exist'
+
+    doLast {
+        def masterFile = file(project.masterChangelog)
+        if (masterFile.exists()) {
+            println "  ✔ Master changelog already exists — skipping."
+            return
+        }
+
+        masterFile.parentFile.mkdirs()
+        masterFile.text = """<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <!-- 1. Schema: tables, views, sequences, indexes, constraints -->
+    <include file="db/changelog/generated/db.changelog-generated.xml"
+             relativeToChangelogFile="false"/>
+
+    <!-- 2. Stored procedures, functions, packages, triggers -->
+    <include file="db/changelog/generated/db.changelog-procedures.xml"
+             relativeToChangelogFile="false"/>
+
+</databaseChangeLog>
+"""
+        println "  ✔ Created: ${masterFile.path}"
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STEP 3 — applyChangelogToLocal
+//
+//  What happens:
+//    1. Connects to LOCAL DB (port 1521)
+//    2. Reads db.changelog-master.xml which includes:
+//         → db.changelog-generated.xml  (tables, views, sequences)
+//         → db.changelog-procedures.xml (stored procs, functions)
+//    3. Checks DATABASECHANGELOG table for already-applied changesets
+//    4. Applies ONLY new/pending changesets (idempotent)
+//    5. Records applied changesets in DATABASECHANGELOG
+//
+//  Run: ./gradlew applyChangelogToLocal
+// ═══════════════════════════════════════════════════════════════
+tasks.register('applyChangelogToLocal') {
+    group       = 'Liquibase - 2. Apply'
+    description = 'STEP 3: Apply master changelog to LOCAL Docker Oracle DB (idempotent)'
+
+    mustRunAfter 'generateChangelogFromDev', 'extractProcsFromDev'
+
+    doFirst {
+        println ""
+        println "╔══════════════════════════════════════════════════════════╗"
+        println "║  STEP 3 — Apply Changelogs to LOCAL Docker DB           ║"
+        println "╚══════════════════════════════════════════════════════════╝"
+        println "  Target    : ${project.localUrl}"
+        println "  Schema    : ${project.localSchema}"
+        println "  Changelog : ${project.masterChangelog}"
+        println ""
+        println "  Only NEW changesets will be applied."
+        println "  Already-applied changesets are skipped automatically."
+        println ""
+    }
+
+    doLast {
+        runLiquibase([
+                "--url=${project.localUrl}",
+                "--username=${project.localUsername}",
+                "--password=${project.localPassword}",
+                "--driver=${project.dbDriver}",
+                "--defaultSchemaName=${project.localSchema}",
+//                "--changelogFile=${project.masterChangelog}",
+                "--searchPath=${project.changelogDir}/../..",   // ← points to src/main/resources
+                "--changelogFile=db/changelog/db.changelog-master.xml",  // ← relative path
+
+                "--logLevel=info",
+                "update"
+        ])
+
+        println ""
+        println "  ✔ Changelogs applied — LOCAL DB is in sync with DEV DB!"
+        println ""
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILITY — pendingChanges
+//  Shows changesets not yet applied. Nothing is changed.
+//  Run: ./gradlew pendingChanges
+// ═══════════════════════════════════════════════════════════════
+tasks.register('pendingChanges') {
+    group       = 'Liquibase - 2. Apply'
+    description = 'Show changesets not yet applied to LOCAL DB (read-only)'
+
+    doFirst {
+        println ""
+        println "  Checking pending changesets on LOCAL DB: ${project.localUrl}"
+        println "  (Nothing will be applied)"
+        println ""
+    }
+
+    doLast {
+        runLiquibase([
+                "--url=${project.localUrl}",
+                "--username=${project.localUsername}",
+                "--password=${project.localPassword}",
+                "--driver=${project.dbDriver}",
+                "--defaultSchemaName=${project.localSchema}",
+                "--changelogFile=${project.masterChangelog}",
+                "--logLevel=info",
+                "status"
+        ])
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILITY — diffDatabases
+//  Compares DEV (reference) vs LOCAL (target). Nothing is changed.
+//  Run: ./gradlew diffDatabases
+// ═══════════════════════════════════════════════════════════════
+tasks.register('diffDatabases') {
+    group       = 'Liquibase - 3. Verify'
+    description = 'Compare DEV DB vs LOCAL DB. Writes diff changelog. Nothing is changed.'
+
+    doFirst {
+        println ""
+        println "  Reference : ${project.devUrl}"
+        println "  Target    : ${project.localUrl}"
+        println "  Output    : ${project.diffChangelog}"
+        println ""
+        file("${project.changelogDir}/diff").mkdirs()
+    }
+
+    doLast {
+        runLiquibase([
+                "--url=${project.localUrl}",
+                "--username=${project.localUsername}",
+                "--password=${project.localPassword}",
+                "--driver=${project.dbDriver}",
+                "--defaultSchemaName=${project.localSchema}",
+                "--referenceUrl=${project.devUrl}",
+                "--referenceUsername=${project.devUsername}",
+                "--referencePassword=${project.devPassword}",
+                "--referenceDriver=${project.dbDriver}",
+                "--referenceDefaultSchemaName=${project.devSchema}",
+                "--changelogFile=${project.diffChangelog}",
+                "--logLevel=info",
+                "diffChangelog"
+        ])
+
+        println ""
+        println "  ✔ Diff written to: ${project.diffChangelog}"
+        println ""
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILITY — validateChangelogs
+//  Validates changelog XML. Nothing is changed.
+//  Run: ./gradlew validateChangelogs
+// ═══════════════════════════════════════════════════════════════
+tasks.register('validateChangelogs') {
+    group       = 'Liquibase - 3. Verify'
+    description = 'Validate master changelog XML integrity against LOCAL DB (read-only)'
+
+    doFirst {
+        println ""
+        println "  Validating : ${project.masterChangelog}"
+        println "  Against DB : ${project.localUrl}"
+        println ""
+    }
+
+    doLast {
+        runLiquibase([
+                "--url=${project.localUrl}",
+                "--username=${project.localUsername}",
+                "--password=${project.localPassword}",
+                "--driver=${project.dbDriver}",
+                "--defaultSchemaName=${project.localSchema}",
+                "--changelogFile=${project.masterChangelog}",
+                "--logLevel=info",
+                "validate"
+        ])
+
+        println ""
+        println "  ✔ Validation passed."
+        println ""
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILITY — rollbackLastChangeset
+//  Undoes last applied changeset on LOCAL DB.
+//  Run: ./gradlew rollbackLastChangeset
+//  Run: ./gradlew rollbackLastChangeset -ProllbackCount=3
+// ═══════════════════════════════════════════════════════════════
+tasks.register('rollbackLastChangeset') {
+    group       = 'Liquibase - 4. Rollback'
+    description = 'Rollback last applied changeset on LOCAL DB. Use -ProllbackCount=N for N changesets.'
+
+    doFirst {
+        println ""
+        println "  Rolling back on LOCAL DB : ${project.localUrl}"
+        println ""
+    }
+
+    doLast {
+        def count = project.findProperty('rollbackCount') ?: '1'
+        runLiquibase([
+                "--url=${project.localUrl}",
+                "--username=${project.localUsername}",
+                "--password=${project.localPassword}",
+                "--driver=${project.dbDriver}",
+                "--defaultSchemaName=${project.localSchema}",
+                "--changelogFile=${project.masterChangelog}",
+                "--logLevel=info",
+                "rollbackCount",
+                count.toString()
+        ])
+
+        println ""
+        println "  ✔ Rollback complete."
+        println ""
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  FULL PIPELINE — fullMigration
+//
+//  Order: Step 1 → Step 2 → Step 3
+//  Run:   ./gradlew fullMigration
+// ═══════════════════════════════════════════════════════════════
+tasks.register('fullMigration') {
+    group       = 'Liquibase - Full Pipeline'
+    description = 'Step1 generateChangelogFromDev → Step2 extractProcsFromDev → Step3 applyChangelogToLocal'
+
+    dependsOn 'generateChangelogFromDev', 'extractProcsFromDev', 'applyChangelogToLocal'
+
+    doFirst {
+        println ""
+        println "╔══════════════════════════════════════════════════════════╗"
+        println "║           FULL MIGRATION PIPELINE                       ║"
+        println "╠══════════════════════════════════════════════════════════╣"
+        println "║  Step 1 → generateChangelogFromDev                      ║"
+        println "║  Step 2 → extractProcsFromDev                           ║"
+        println "║  Step 3 → applyChangelogToLocal                         ║"
+        println "╚══════════════════════════════════════════════════════════╝"
+        println ""
+    }
+
+    doLast {
+        println ""
+        println "╔══════════════════════════════════════════════════════════╗"
+        println "║  ✔  MIGRATION COMPLETE                                  ║"
+        println "║     LOCAL Docker Oracle DB is now in sync with DEV DB   ║"
+        println "╚══════════════════════════════════════════════════════════╝"
+        println ""
+    }
+}
+
+//=========
+tasks.named('fullMigration') {
+    dependsOn 'generateChangelogFromDev',
+            'fixChangelogSchemaRefs',
+            'reorderChangelog',
+            'extractProcsFromDev',
+            'createMasterChangelog',
+            'applyChangelogToLocal'
+}
+
+tasks.named('fixChangelogSchemaRefs') { mustRunAfter 'generateChangelogFromDev' }
+tasks.named('reorderChangelog')       { mustRunAfter 'fixChangelogSchemaRefs' }
+tasks.named('extractProcsFromDev')    { mustRunAfter 'reorderChangelog' }
+tasks.named('createMasterChangelog')  { mustRunAfter 'extractProcsFromDev' }
+tasks.named('applyChangelogToLocal')  { mustRunAfter 'createMasterChangelog' }
