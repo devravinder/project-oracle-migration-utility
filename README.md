@@ -65,6 +65,7 @@ docker compose down -v
     - Please run the following SQL to set the appropriate permissions, and try running the command again.
     - `GRANT SELECT ON SYS.DBA_RECYCLEBIN TO DEV_USER;`
       - here `DEV_USER` is source db username
+3. Still the docker init-scripts are using hard-coded values, need to replace with env values
 
 ## Prompt
 This project is migration utility for oracle db to set up oracle db on local environment from dev environment.

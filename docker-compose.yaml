@@ -8,6 +8,7 @@ services:
       ORACLE_PASSWORD: ${LOCAL_ORACLE_SYS_PASSWORD}
       APP_USER: ${LOCAL_DB_USER}
       APP_USER_PASSWORD: ${LOCAL_DB_PASSWORD}
+      USER_PDB: ${LOCAL_ORACLE_PDB}
     ports:
       - "${LOCAL_DB_PORT}:1521"
     volumes:
@@ -27,6 +28,7 @@ services:
       ORACLE_PASSWORD: ${DEV_ORACLE_SYS_PASSWORD}
       APP_USER: ${DEV_DB_USER}                                        # different user to mimic real dev
       APP_USER_PASSWORD: ${DEV_DB_PASSWORD}
+      USER_PDB: ${DEV_ORACLE_PDB}
     ports:
       - "${DEV_DB_PORT}:1521"
     volumes:
