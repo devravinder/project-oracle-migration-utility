@@ -64,7 +64,7 @@ docker compose down -v
 2.  The source db user (DEV_USER) needs to have "SELECT ON SYS.DBA_RECYCLEBIN" permissions. 
     - Please run the following SQL to set the appropriate permissions, and try running the command again.
     - `GRANT SELECT ON SYS.DBA_RECYCLEBIN TO DEV_USER;`
-      - here `DEV_USER` is source db user name
+      - here `DEV_USER` is source db username
 
 ## Prompt
 This project is migration utility for oracle db to set up oracle db on local environment from dev environment.
