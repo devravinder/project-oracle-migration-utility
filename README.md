@@ -1,7 +1,16 @@
-# Migrations From Existing DB
-- This project is a migration utility to generate migration files form existing db (dev) & to apply the migrations to local db (local)
-- Setup local db from existing db
-- source db = dev, taget db = local
+
+# Database Migration from Existing Database
+
+This project is a migration utility that generates migration files from an existing development database and applies them to a local database.
+
+1. Purpose
+   - Generate migration files from the existing source database `dev` & Apply those migrations to the target database `local`
+   - Set up a database schema based on the existing database
+
+2. Databases
+   - Source database: Development (dev)
+   - Target database: Local (local)
+
 
 ## Setup
 

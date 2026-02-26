@@ -4,19 +4,20 @@ ext {
     def devDbPort     = System.getenv('DEV_DB_PORT') ?: '1522'
     def devDbUser     = System.getenv('DEV_DB_USER') ?: 'DEV_USER'
     def devDbPassword = System.getenv('DEV_DB_PASSWORD') ?: 'DEV_PASS'
-    def oraclePdb     = System.getenv('ORACLE_PDB') ?: 'XEPDB1'
+    def devOraclePdb  = System.getenv('DEV_ORACLE_PDB') ?: 'XEPDB1'
 
     def localDbHost     = System.getenv('LOCAL_DB_HOST') ?: 'localhost'
     def localDbPort     = System.getenv('LOCAL_DB_PORT') ?: '1521'
     def localDbUser     = System.getenv('LOCAL_DB_USER') ?: 'LOCAL_USER'
     def localDbPassword = System.getenv('LOCAL_DB_PASSWORD') ?: 'LOCAL_PASS'
+    def localOraclePdb  = System.getenv('LOCAL_ORACLE_PDB') ?: 'XEPDB1'
 
-    devUrl      = "jdbc:oracle:thin:@//${devDbHost}:${devDbPort}/${oraclePdb}"
+    devUrl      = "jdbc:oracle:thin:@//${devDbHost}:${devDbPort}/${devOraclePdb}"
     devUsername = devDbUser
     devPassword = devDbPassword
     devSchema   = devDbUser
 
-    localUrl      = "jdbc:oracle:thin:@//${localDbHost}:${localDbPort}/${oraclePdb}"
+    localUrl      = "jdbc:oracle:thin:@//${localDbHost}:${localDbPort}/${localOraclePdb}"
     localUsername = localDbUser
     localPassword = localDbPassword
     localSchema   = localDbUser
