@@ -1,4 +1,7 @@
 # Migrations From Existing DB
+- This project is a migration utility to generate migration files form existing db (dev) & to apply the migrations to local db (local)
+- Setup local db from existing db
+- source db = dev, taget db = local
 
 ## Setup
 
