@@ -1,13 +1,25 @@
 ext {
-    devUrl      = project.findProperty('dev.db.url')      ?: 'jdbc:oracle:thin:@//localhost:1522/XEPDB1'
-    devUsername = project.findProperty('dev.db.username')  ?: 'DEV_USER'
-    devPassword = project.findProperty('dev.db.password')  ?: 'DEV_PASS'
-    devSchema   = project.findProperty('dev.db.schema')    ?: 'DEV_USER'
+    // Read from environment variables, with defaults for local development
+    def devDbHost     = System.getenv('DEV_DB_HOST') ?: 'localhost'
+    def devDbPort     = System.getenv('DEV_DB_PORT') ?: '1522'
+    def devDbUser     = System.getenv('DEV_DB_USER') ?: 'DEV_USER'
+    def devDbPassword = System.getenv('DEV_DB_PASSWORD') ?: 'DEV_PASS'
+    def oraclePdb     = System.getenv('ORACLE_PDB') ?: 'XEPDB1'
 
-    localUrl      = project.findProperty('local.db.url')      ?: 'jdbc:oracle:thin:@//localhost:1521/XEPDB1'
-    localUsername = project.findProperty('local.db.username')  ?: 'LOCAL_USER'
-    localPassword = project.findProperty('local.db.password')  ?: 'LOCAL_PASS'
-    localSchema   = project.findProperty('local.db.schema')    ?: 'LOCAL_USER'
+    def localDbHost     = System.getenv('LOCAL_DB_HOST') ?: 'localhost'
+    def localDbPort     = System.getenv('LOCAL_DB_PORT') ?: '1521'
+    def localDbUser     = System.getenv('LOCAL_DB_USER') ?: 'LOCAL_USER'
+    def localDbPassword = System.getenv('LOCAL_DB_PASSWORD') ?: 'LOCAL_PASS'
+
+    devUrl      = "jdbc:oracle:thin:@//${devDbHost}:${devDbPort}/${oraclePdb}"
+    devUsername = devDbUser
+    devPassword = devDbPassword
+    devSchema   = devDbUser
+
+    localUrl      = "jdbc:oracle:thin:@//${localDbHost}:${localDbPort}/${oraclePdb}"
+    localUsername = localDbUser
+    localPassword = localDbPassword
+    localSchema   = localDbUser
 
     dbDriver = 'oracle.jdbc.OracleDriver'
 
@@ -152,6 +164,10 @@ tasks.register('reorderChangelog') {
         println "  Reordering changesets: sequences → tables → views → indexes → constraints..."
 
         def content = generatedFile.text
+        if (!content.contains('<changeSet')) {
+            println "  No changesets found in ${generatedFile.name}, skipping reorder."
+            return
+        }
         def header = content.substring(0, content.indexOf('<changeSet'))
         def footer = '</databaseChangeLog>'
 
