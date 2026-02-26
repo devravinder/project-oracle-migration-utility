@@ -49,3 +49,16 @@ docker compose down -v
 1.  Community Liquibase limitation: generateChangeLog captures tables, views, sequences, indexes, constraints 
     - but NOT stored procedures/functions/packages/triggers. 
     - Those need to be exported manually as SQL files (see Step 2 workaround below).
+
+## Prompt
+This project is migration utility for oracle db to set up oracle db on local environment from dev environment.
+The dev db is already created with schema, tables, functions & stored procedures.
+
+This project uses liquibase to achieve the goal.
+
+Currently, this project uses both dev, local db from docker, for dev db...we created seed data using entry points to mimic real world.
+
+
+we run the following commands to do migrations
+
+./gradlew fullMigration

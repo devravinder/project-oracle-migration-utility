@@ -15,9 +15,6 @@ ext {
     masterChangelog    = "$changelogDir/db.changelog-master.xml"
     generatedChangelog = "$changelogDir/generated/db.changelog-generated.xml"
     diffChangelog      = "$changelogDir/diff/db.changelog-diff.xml"
-
-//    resourcesDir   = "$projectDir/src/main/resources"
-//    masterChangelog = "db/changelog/db.changelog-master.xml"   // ← now relative
 }
 
 // ─────────────────────────────────────────────
@@ -59,14 +56,6 @@ def runLiquibase(List<String> args) {
 
 // ═══════════════════════════════════════════════════════════════
 //  STEP 1 — generateChangelogFromDev
-//
-//  What happens:
-//    1. Connects to DEV DB (port 1522)
-//    2. Scans all tables, views, sequences, indexes,
-//       PKs, FKs, unique constraints, check constraints
-//    3. Writes XML → db/changelog/generated/db.changelog-generated.xml
-//
-//  Run: ./gradlew generateChangelogFromDev
 // ═══════════════════════════════════════════════════════════════
 tasks.register('generateChangelogFromDev') {
     group       = 'Liquibase - 1. Generate'
@@ -108,7 +97,6 @@ tasks.register('generateChangelogFromDev') {
     }
 }
 
-
 tasks.register('fixChangelogSchemaRefs') {
     group       = 'Liquibase - 1. Generate'
     description = 'Fixes schema refs and removes system-generated constraint names from generated changelog'
@@ -127,25 +115,17 @@ tasks.register('fixChangelogSchemaRefs') {
 
         def content = generatedFile.text
 
-        // 1. Strip DEV schema sequence refs: DEV_USER.SEQ_X.NEXTVAL → SEQ_X.NEXTVAL
         content = content.replaceAll(
                 "${project.devSchema.toUpperCase()}\\.(SEQ_[A-Z_]+\\.NEXTVAL)",
                 '$1'
         )
-
-        // 2. Strip remaining DEV schema prefix: DEV_USER. → (empty)
         content = content.replaceAll("${project.devSchema.toUpperCase()}\\.", '')
-
-        // 3. Strip quoted DEV schema prefix: "DEV_USER". → (empty)
         content = content.replaceAll("\"${project.devSchema.toUpperCase()}\"\\.", '')
-
-        // 4. Remove system-generated Oracle constraint names (SYS_C + digits)
-        //    e.g. CONSTRAINT SYS_C008305 PRIMARY KEY → PRIMARY KEY (no name)
-        //    Liquibase XML: constraintName="SYS_C008305" → remove the attribute entirely
-        content = content.replaceAll(/constraintName="SYS_C\d+"/, '')
-
-        // 5. Also strip from raw SQL inside failOnError or preConditions if any
+        content = content.replaceAll(/(?i)(constraintName|primaryKeyName|uniqueConstraintName)="SYS_C\d+"/, '')
         content = content.replaceAll(/CONSTRAINT SYS_C\d+\s+/, '')
+
+        // Remove virtual column data from inserts, as it cannot be inserted directly.
+        content = content.replaceAll(/<column name="TOTAL_AMOUNT"[^>]*\/>\r?\n?/, '')
 
         generatedFile.text = content
 
@@ -154,7 +134,6 @@ tasks.register('fixChangelogSchemaRefs') {
         println ""
     }
 }
-
 
 tasks.register('reorderChangelog') {
     group       = 'Liquibase - 1. Generate'
@@ -173,19 +152,16 @@ tasks.register('reorderChangelog') {
         println "  Reordering changesets: sequences → tables → views → indexes → constraints..."
 
         def content = generatedFile.text
-
-        // Parse out individual changeSets
-        def changeSetPattern = ~/(?s)<changeSet[^>]*>.*?<\/changeSet>/
         def header = content.substring(0, content.indexOf('<changeSet'))
         def footer = '</databaseChangeLog>'
 
+        def changeSetPattern = ~/(?s)<changeSet[^>]*>.*?<\/changeSet>/
         def changeSets = []
         def matcher = changeSetPattern.matcher(content)
         while (matcher.find()) {
             changeSets << matcher.group()
         }
 
-        // Categorize each changeSet by its content
         def sequences   = changeSets.findAll { it.contains('<createSequence') }
         def tables      = changeSets.findAll { it.contains('<createTable') }
         def views       = changeSets.findAll { it.contains('<createView') }
@@ -193,6 +169,20 @@ tasks.register('reorderChangelog') {
         def addFKs      = changeSets.findAll { it.contains('<addForeignKeyConstraint') }
         def addPKs      = changeSets.findAll { it.contains('<addPrimaryKey') }
         def addUnique   = changeSets.findAll { it.contains('<addUniqueConstraint') }
+
+        def uniqueIndexNames = indexes.findAll { it.contains('unique="true"') }
+            .collect { cs ->
+                def indexMatcher = (cs =~ /<createIndex indexName="([^"]+)"/)
+                return indexMatcher.find() ? indexMatcher.group(1) : null
+            }.findAll { it != null }
+
+        def filteredAddUnique = addUnique.findAll { cs ->
+            def constraintMatcher = (cs =~ /<addUniqueConstraint [^>]*forIndexName="([^"]+)"/)
+            def forIndex = constraintMatcher.find() ? constraintMatcher.group(1) : ''
+            !uniqueIndexNames.contains(forIndex)
+        }
+        def removedCount = addUnique.size() - filteredAddUnique.size()
+        
         def others      = changeSets.findAll { cs ->
             !sequences.contains(cs) &&
                     !tables.contains(cs)    &&
@@ -203,33 +193,34 @@ tasks.register('reorderChangelog') {
                     !addUnique.contains(cs)
         }
 
-        // Rebuild in correct order
-        def ordered = sequences + tables + views + indexes + addPKs + addUnique + addFKs + others
+        def inserts = others.findAll { it.contains('<insert tableName=') }
+        others = others.findAll { !it.contains('<insert tableName=') }
 
+        def tableInsertOrder = ['ROLES', 'USERS', 'PRODUCTS', 'ORDERS', 'AUDIT_LOG']
+        def sortedInserts = inserts.sort { cs1, cs2 ->
+            def table1 = (cs1 =~ /<insert tableName="([^"]+)"/)[0][1]
+            def table2 = (cs2 =~ /<insert tableName="([^"]+)"/)[0][1]
+            def index1 = tableInsertOrder.indexOf(table1)
+            def index2 = tableInsertOrder.indexOf(table2)
+            index1 <=> index2
+        }
+
+        def ordered = sequences + tables + views + indexes + addPKs + filteredAddUnique + addFKs + sortedInserts + others
         def newContent = header + ordered.join('\n\n') + '\n\n' + footer
-
         generatedFile.text = newContent
 
         println "  ✔ Reordered: ${sequences.size()} sequences, ${tables.size()} tables, " +
                 "${views.size()} views, ${indexes.size()} indexes, " +
-                "${addFKs.size()} FKs, ${others.size()} others"
+                "${sortedInserts.size()} inserts, ${addFKs.size()} FKs, ${others.size()} others"
+        if (removedCount > 0) {
+            println "  ✔ Removed ${removedCount} redundant <addUniqueConstraint> changesets already covered by unique indexes"
+        }
         println ""
     }
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  STEP 2 — extractProcsFromDev
-//
-//  What happens:
-//    1. Raw JDBC connection to DEV DB
-//    2. Queries ALL_OBJECTS for TYPE, FUNCTION, PROCEDURE,
-//       PACKAGE, PACKAGE BODY, TRIGGER in devSchema
-//    3. Calls DBMS_METADATA.GET_DDL for each object
-//    4. Strips schema prefix (makes DDL portable)
-//    5. Writes → db/changelog/procedures/<type>_<name>.sql
-//    6. Generates db.changelog-procedures.xml (runOnChange=true)
-//
-//  Run: ./gradlew extractProcsFromDev
 // ═══════════════════════════════════════════════════════════════
 tasks.register('extractProcsFromDev') {
     group       = 'Liquibase - 1. Generate'
@@ -360,7 +351,6 @@ def buildProceduresChangelog(List sqlFiles, String clDir) {
     file("$clDir/generated/db.changelog-procedures.xml").text = sb.toString()
 }
 
-
 tasks.register('createMasterChangelog') {
     group       = 'Liquibase - 1. Generate'
     description = 'Creates db.changelog-master.xml if it does not exist'
@@ -396,17 +386,6 @@ tasks.register('createMasterChangelog') {
 
 // ═══════════════════════════════════════════════════════════════
 //  STEP 3 — applyChangelogToLocal
-//
-//  What happens:
-//    1. Connects to LOCAL DB (port 1521)
-//    2. Reads db.changelog-master.xml which includes:
-//         → db.changelog-generated.xml  (tables, views, sequences)
-//         → db.changelog-procedures.xml (stored procs, functions)
-//    3. Checks DATABASECHANGELOG table for already-applied changesets
-//    4. Applies ONLY new/pending changesets (idempotent)
-//    5. Records applied changesets in DATABASECHANGELOG
-//
-//  Run: ./gradlew applyChangelogToLocal
 // ═══════════════════════════════════════════════════════════════
 tasks.register('applyChangelogToLocal') {
     group       = 'Liquibase - 2. Apply'
@@ -435,9 +414,8 @@ tasks.register('applyChangelogToLocal') {
                 "--password=${project.localPassword}",
                 "--driver=${project.dbDriver}",
                 "--defaultSchemaName=${project.localSchema}",
-//                "--changelogFile=${project.masterChangelog}",
-                "--searchPath=${project.changelogDir}/../..",   // ← points to src/main/resources
-                "--changelogFile=db/changelog/db.changelog-master.xml",  // ← relative path
+                "--searchPath=${project.changelogDir}/../..",
+                "--changelogFile=db/changelog/db.changelog-master.xml",
 
                 "--logLevel=info",
                 "update"
@@ -449,22 +427,12 @@ tasks.register('applyChangelogToLocal') {
     }
 }
 
-
 // ═══════════════════════════════════════════════════════════════
-//  UTILITY — pendingChanges
-//  Shows changesets not yet applied. Nothing is changed.
-//  Run: ./gradlew pendingChanges
+//  UTILITIES
 // ═══════════════════════════════════════════════════════════════
 tasks.register('pendingChanges') {
-    group       = 'Liquibase - 2. Apply'
+    group       = 'Liquibase - 3. Verify'
     description = 'Show changesets not yet applied to LOCAL DB (read-only)'
-
-    doFirst {
-        println ""
-        println "  Checking pending changesets on LOCAL DB: ${project.localUrl}"
-        println "  (Nothing will be applied)"
-        println ""
-    }
 
     doLast {
         runLiquibase([
@@ -474,28 +442,16 @@ tasks.register('pendingChanges') {
                 "--driver=${project.dbDriver}",
                 "--defaultSchemaName=${project.localSchema}",
                 "--changelogFile=${project.masterChangelog}",
-                "--logLevel=info",
                 "status"
         ])
     }
 }
 
-
-// ═══════════════════════════════════════════════════════════════
-//  UTILITY — diffDatabases
-//  Compares DEV (reference) vs LOCAL (target). Nothing is changed.
-//  Run: ./gradlew diffDatabases
-// ═══════════════════════════════════════════════════════════════
 tasks.register('diffDatabases') {
     group       = 'Liquibase - 3. Verify'
     description = 'Compare DEV DB vs LOCAL DB. Writes diff changelog. Nothing is changed.'
 
     doFirst {
-        println ""
-        println "  Reference : ${project.devUrl}"
-        println "  Target    : ${project.localUrl}"
-        println "  Output    : ${project.diffChangelog}"
-        println ""
         file("${project.changelogDir}/diff").mkdirs()
     }
 
@@ -504,41 +460,19 @@ tasks.register('diffDatabases') {
                 "--url=${project.localUrl}",
                 "--username=${project.localUsername}",
                 "--password=${project.localPassword}",
-                "--driver=${project.dbDriver}",
-                "--defaultSchemaName=${project.localSchema}",
                 "--referenceUrl=${project.devUrl}",
                 "--referenceUsername=${project.devUsername}",
                 "--referencePassword=${project.devPassword}",
-                "--referenceDriver=${project.dbDriver}",
-                "--referenceDefaultSchemaName=${project.devSchema}",
                 "--changelogFile=${project.diffChangelog}",
-                "--logLevel=info",
                 "diffChangelog"
         ])
-
-        println ""
-        println "  ✔ Diff written to: ${project.diffChangelog}"
-        println ""
     }
 }
 
-
-// ═══════════════════════════════════════════════════════════════
-//  UTILITY — validateChangelogs
-//  Validates changelog XML. Nothing is changed.
-//  Run: ./gradlew validateChangelogs
-// ═══════════════════════════════════════════════════════════════
 tasks.register('validateChangelogs') {
     group       = 'Liquibase - 3. Verify'
     description = 'Validate master changelog XML integrity against LOCAL DB (read-only)'
-
-    doFirst {
-        println ""
-        println "  Validating : ${project.masterChangelog}"
-        println "  Against DB : ${project.localUrl}"
-        println ""
-    }
-
+    
     doLast {
         runLiquibase([
                 "--url=${project.localUrl}",
@@ -547,32 +481,14 @@ tasks.register('validateChangelogs') {
                 "--driver=${project.dbDriver}",
                 "--defaultSchemaName=${project.localSchema}",
                 "--changelogFile=${project.masterChangelog}",
-                "--logLevel=info",
                 "validate"
         ])
-
-        println ""
-        println "  ✔ Validation passed."
-        println ""
     }
 }
 
-
-// ═══════════════════════════════════════════════════════════════
-//  UTILITY — rollbackLastChangeset
-//  Undoes last applied changeset on LOCAL DB.
-//  Run: ./gradlew rollbackLastChangeset
-//  Run: ./gradlew rollbackLastChangeset -ProllbackCount=3
-// ═══════════════════════════════════════════════════════════════
 tasks.register('rollbackLastChangeset') {
     group       = 'Liquibase - 4. Rollback'
     description = 'Rollback last applied changeset on LOCAL DB. Use -ProllbackCount=N for N changesets.'
-
-    doFirst {
-        println ""
-        println "  Rolling back on LOCAL DB : ${project.localUrl}"
-        println ""
-    }
 
     doLast {
         def count = project.findProperty('rollbackCount') ?: '1'
@@ -583,60 +499,88 @@ tasks.register('rollbackLastChangeset') {
                 "--driver=${project.dbDriver}",
                 "--defaultSchemaName=${project.localSchema}",
                 "--changelogFile=${project.masterChangelog}",
-                "--logLevel=info",
                 "rollbackCount",
                 count.toString()
         ])
-
-        println ""
-        println "  ✔ Rollback complete."
-        println ""
     }
 }
 
-
-// ═══════════════════════════════════════════════════════════════
-//  FULL PIPELINE — fullMigration
-//
-//  Order: Step 1 → Step 2 → Step 3
-//  Run:   ./gradlew fullMigration
-// ═══════════════════════════════════════════════════════════════
-tasks.register('fullMigration') {
-    group       = 'Liquibase - Full Pipeline'
-    description = 'Step1 generateChangelogFromDev → Step2 extractProcsFromDev → Step3 applyChangelogToLocal'
-
-    dependsOn 'generateChangelogFromDev', 'extractProcsFromDev', 'applyChangelogToLocal'
+tasks.register('cleanLocalDb') {
+    group       = 'Liquibase - 4. Rollback'
+    description = 'Drops all objects from the LOCAL schema to allow for a clean migration run'
 
     doFirst {
         println ""
         println "╔══════════════════════════════════════════════════════════╗"
-        println "║           FULL MIGRATION PIPELINE                       ║"
-        println "╠══════════════════════════════════════════════════════════╣"
-        println "║  Step 1 → generateChangelogFromDev                      ║"
-        println "║  Step 2 → extractProcsFromDev                           ║"
-        println "║  Step 3 → applyChangelogToLocal                         ║"
+        println "║  CLEAN — Drop All Objects from LOCAL DB Schema          ║"
         println "╚══════════════════════════════════════════════════════════╝"
+        println "  Target : ${project.localUrl}"
+        println "  Schema : ${project.localSchema}"
+        println ""
+        println "  ⚠ WARNING: This will permanently delete all objects and data"
+        println "    in the '${project.localSchema}' schema."
         println ""
     }
 
     doLast {
+        def urls           = configurations.liquibaseRuntime.collect { it.toURI().toURL() }
+        def urlClassLoader = new URLClassLoader(urls.toArray(new URL[0]) as URL[], Thread.currentThread().contextClassLoader)
+        def driverClass    = Class.forName('oracle.jdbc.OracleDriver', true, urlClassLoader)
+
+        def props = new Properties()
+        props.setProperty('user',     project.localUsername)
+        props.setProperty('password', project.localPassword)
+
+        println "  Connecting to LOCAL DB..."
+        def conn = driverClass.getDeclaredConstructor().newInstance().connect(project.localUrl, props)
+        println "  Connected ✔"
         println ""
-        println "╔══════════════════════════════════════════════════════════╗"
-        println "║  ✔  MIGRATION COMPLETE                                  ║"
-        println "║     LOCAL Docker Oracle DB is now in sync with DEV DB   ║"
-        println "╚══════════════════════════════════════════════════════════╝"
+
+        try {
+            def dropStatements = [
+                "BEGIN FOR c IN (SELECT 'DROP ' || object_type || ' ' || object_name || CASE WHEN object_type = 'TABLE' THEN ' CASCADE CONSTRAINTS' ELSE '' END AS stmt FROM user_objects WHERE object_type IN ('TABLE', 'VIEW', 'PACKAGE', 'PROCEDURE', 'FUNCTION', 'SEQUENCE', 'TRIGGER', 'TYPE')) LOOP EXECUTE IMMEDIATE c.stmt; END LOOP; END;",
+                "PURGE RECYCLEBIN"
+            ]
+
+            def stmt = conn.createStatement()
+            println "  Dropping objects from schema '${project.localSchema}'..."
+            dropStatements.each { sql ->
+                try {
+                    stmt.execute(sql)
+                } catch (Exception e) {
+                    println "    (Ignoring: ${e.message.split('\\n')[0]})"
+                }
+            }
+            println "  ✔ Schema cleaned."
+        } finally {
+            conn.close()
+            println "  Connection closed."
+        }
         println ""
     }
 }
 
-//=========
-tasks.named('fullMigration') {
-    dependsOn 'generateChangelogFromDev',
-            'fixChangelogSchemaRefs',
-            'reorderChangelog',
-            'extractProcsFromDev',
-            'createMasterChangelog',
-            'applyChangelogToLocal'
+// ═══════════════════════════════════════════════════════════════
+//  FULL PIPELINE
+// ═══════════════════════════════════════════════════════════════
+tasks.register('fullMigration') {
+    group       = 'Liquibase - Full Pipeline'
+    description = 'Runs the full migration: clean → generate → fix → reorder → extract → create → apply'
+    
+    dependsOn 'cleanLocalDb', 'generateChangelogFromDev', 'fixChangelogSchemaRefs', 'reorderChangelog', 'extractProcsFromDev', 'createMasterChangelog', 'applyChangelogToLocal'
+
+    doFirst {
+        println "╔══════════════════════════════════════════════════════════╗"
+        println "║           FULL MIGRATION PIPELINE                       ║"
+        println "╚══════════════════════════════════════════════════════════╝"
+    }
+    
+    doLast {
+        println ""
+        println "╔══════════════════════════════════════════════════════════╗"
+        println "║  ✔  MIGRATION COMPLETE                                  ║"
+        println "╚══════════════════════════════════════════════════════════╝"
+    }
 }
 
 tasks.named('fixChangelogSchemaRefs') { mustRunAfter 'generateChangelogFromDev' }
@@ -644,3 +588,7 @@ tasks.named('reorderChangelog')       { mustRunAfter 'fixChangelogSchemaRefs' }
 tasks.named('extractProcsFromDev')    { mustRunAfter 'reorderChangelog' }
 tasks.named('createMasterChangelog')  { mustRunAfter 'extractProcsFromDev' }
 tasks.named('applyChangelogToLocal')  { mustRunAfter 'createMasterChangelog' }
+tasks.named('fullMigration').configure {
+    mustRunAfter 'cleanLocalDb'
+    tasks.findByName('generateChangelogFromDev').mustRunAfter('cleanLocalDb')
+}
