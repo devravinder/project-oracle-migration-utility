@@ -13,7 +13,7 @@ services:
       - "${LOCAL_DB_PORT}:1521"
     volumes:
       - oracle-xe-data:/opt/oracle/oradata
-      - ./init-scripts/common:/container-entrypoint-initdb.d   # shared grants only
+      - ./init-scripts/local:/container-entrypoint-initdb.d   # shared grants only
     healthcheck:
       test: ["CMD", "healthcheck.sh"]
       interval: 20s

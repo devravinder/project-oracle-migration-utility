@@ -1,26 +1,26 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
-    <changeSet author="ravinder (generated)" id="1772105538517-12">
+    <changeSet author="ravinder (generated)" id="1772106180133-12">
         <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_AUDIT_LOG" startValue="5"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-13">
+<changeSet author="ravinder (generated)" id="1772106180133-13">
         <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_ORDERS" startValue="5"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-14">
+<changeSet author="ravinder (generated)" id="1772106180133-14">
         <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_PRODUCTS" startValue="5"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-15">
+<changeSet author="ravinder (generated)" id="1772106180133-15">
         <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_ROLES" startValue="5"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-16">
+<changeSet author="ravinder (generated)" id="1772106180133-16">
         <createSequence cacheSize="0" maxValue="9999999999999999999999999999" sequenceName="SEQ_USERS" startValue="5"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-1">
+<changeSet author="ravinder (generated)" id="1772106180133-1">
         <createTable tableName="ORDERS">
             <column defaultValueComputed="SEQ_ORDERS.NEXTVAL" name="ORDER_ID" type="NUMBER">
                 <constraints nullable="false" primaryKey="true" />
@@ -47,7 +47,7 @@
         </createTable>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-3">
+<changeSet author="ravinder (generated)" id="1772106180133-3">
         <createTable tableName="ROLES">
             <column defaultValueComputed="SEQ_ROLES.NEXTVAL" name="ROLE_ID" type="NUMBER">
                 <constraints nullable="false" primaryKey="true" />
@@ -65,7 +65,7 @@
         </createTable>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-5">
+<changeSet author="ravinder (generated)" id="1772106180133-5">
         <createTable tableName="USERS">
             <column defaultValueComputed="SEQ_USERS.NEXTVAL" name="USER_ID" type="NUMBER">
                 <constraints nullable="false" primaryKey="true" />
@@ -97,7 +97,7 @@
         </createTable>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-7">
+<changeSet author="ravinder (generated)" id="1772106180133-7">
         <createTable tableName="PRODUCTS">
             <column defaultValueComputed="SEQ_PRODUCTS.NEXTVAL" name="PRODUCT_ID" type="NUMBER">
                 <constraints nullable="false" primaryKey="true" />
@@ -121,7 +121,7 @@
         </createTable>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-9">
+<changeSet author="ravinder (generated)" id="1772106180133-9">
         <createTable tableName="AUDIT_LOG">
             <column defaultValueComputed="SEQ_AUDIT_LOG.NEXTVAL" name="LOG_ID" type="NUMBER">
                 <constraints nullable="false" primaryKey="true" />
@@ -142,7 +142,7 @@
         </createTable>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-11">
+<changeSet author="ravinder (generated)" id="1772106180133-11">
         <createView fullDefinition="true" viewName="VW_USER_ORDER_SUMMARY">CREATE OR REPLACE FORCE VIEW "VW_USER_ORDER_SUMMARY" ("USER_ID", "USERNAME", "EMAIL", "ROLE_NAME", "TOTAL_ORDERS", "TOTAL_SPENT", "LAST_ORDER_DATE") AS SELECT
         U.USER_ID,
         U.USERNAME,
@@ -157,105 +157,105 @@
     GROUP BY U.USER_ID, U.USERNAME, U.EMAIL, R.ROLE_NAME</createView>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-17">
+<changeSet author="ravinder (generated)" id="1772106180133-17">
         <createIndex indexName="UK_EMAIL" tableName="USERS" unique="true">
             <column name="EMAIL"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-19">
+<changeSet author="ravinder (generated)" id="1772106180133-19">
         <createIndex indexName="UK_ROLE_NAME" tableName="ROLES" unique="true">
             <column name="ROLE_NAME"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-21">
+<changeSet author="ravinder (generated)" id="1772106180133-21">
         <createIndex indexName="UK_USERNAME" tableName="USERS" unique="true">
             <column name="USERNAME"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-23">
+<changeSet author="ravinder (generated)" id="1772106180133-23">
         <createIndex indexName="IDX_AUDIT_TABLE" tableName="AUDIT_LOG">
             <column name="TABLE_NAME"/>
             <column defaultValueComputed="SYSTIMESTAMP" name="CHANGED_AT"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-24">
+<changeSet author="ravinder (generated)" id="1772106180133-24">
         <createIndex indexName="IDX_ORDERS_PRODUCT" tableName="ORDERS">
             <column name="PRODUCT_ID"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-25">
+<changeSet author="ravinder (generated)" id="1772106180133-25">
         <createIndex indexName="IDX_ORDERS_STATUS" tableName="ORDERS">
             <column name="STATUS"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-26">
+<changeSet author="ravinder (generated)" id="1772106180133-26">
         <createIndex indexName="IDX_ORDERS_USER" tableName="ORDERS">
             <column name="USER_ID"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-27">
+<changeSet author="ravinder (generated)" id="1772106180133-27">
         <createIndex indexName="IDX_USERS_ACTIVE" tableName="USERS">
             <column defaultValueNumeric="1" name="IS_ACTIVE"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-28">
+<changeSet author="ravinder (generated)" id="1772106180133-28">
         <createIndex indexName="IDX_USERS_ROLE" tableName="USERS">
             <column name="ROLE_ID"/>
         </createIndex>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-29">
+<changeSet author="ravinder (generated)" id="1772106180133-29">
         <addForeignKeyConstraint baseColumnNames="PRODUCT_ID" baseTableName="ORDERS" constraintName="FK_ORDER_PRODUCT" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="PRODUCT_ID" referencedTableName="PRODUCTS" validate="true"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-30">
+<changeSet author="ravinder (generated)" id="1772106180133-30">
         <addForeignKeyConstraint baseColumnNames="USER_ID" baseTableName="ORDERS" constraintName="FK_ORDER_USER" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="USER_ID" referencedTableName="USERS" validate="true"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-31">
+<changeSet author="ravinder (generated)" id="1772106180133-31">
         <addForeignKeyConstraint baseColumnNames="ROLE_ID" baseTableName="USERS" constraintName="FK_USER_ROLE" deferrable="false" initiallyDeferred="false" onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="ROLE_ID" referencedTableName="ROLES" validate="true"/>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-4">
+<changeSet author="ravinder (generated)" id="1772106180133-4">
         <insert tableName="ROLES">
             <column name="ROLE_ID" valueNumeric="1"/>
             <column name="ROLE_NAME" value="ADMIN"/>
             <column name="DESCRIPTION" value="Full system access"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:16.860514"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:52.169901"/>
         </insert>
         <insert tableName="ROLES">
             <column name="ROLE_ID" valueNumeric="2"/>
             <column name="ROLE_NAME" value="USER"/>
             <column name="DESCRIPTION" value="Standard user access"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:16.870205"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:52.177085"/>
         </insert>
         <insert tableName="ROLES">
             <column name="ROLE_ID" valueNumeric="3"/>
             <column name="ROLE_NAME" value="MANAGER"/>
             <column name="DESCRIPTION" value="Manager level access"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:16.87968"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:52.182631"/>
         </insert>
         <insert tableName="ROLES">
             <column name="ROLE_ID" valueNumeric="4"/>
             <column name="ROLE_NAME" value="GUEST"/>
             <column name="DESCRIPTION" value="Inactive guest role"/>
             <column name="IS_ACTIVE" valueNumeric="0"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:16.886346"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:52.18889"/>
         </insert>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-6">
+<changeSet author="ravinder (generated)" id="1772106180133-6">
         <insert tableName="USERS">
             <column name="USER_ID" valueNumeric="1"/>
             <column name="USERNAME" value="admin"/>
@@ -266,8 +266,8 @@
             <column name="ROLE_ID" valueNumeric="1"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
             <column name="LAST_LOGIN"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:17.63456"/>
-            <column name="UPDATED_AT" valueDate="2026-02-26T11:31:17.63456"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:52.227467"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T11:41:52.227467"/>
         </insert>
         <insert tableName="USERS">
             <column name="USER_ID" valueNumeric="2"/>
@@ -279,8 +279,8 @@
             <column name="ROLE_ID" valueNumeric="2"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
             <column name="LAST_LOGIN"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:18.04723"/>
-            <column name="UPDATED_AT" valueDate="2026-02-26T11:31:18.04723"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:53.132186"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T11:41:53.132186"/>
         </insert>
         <insert tableName="USERS">
             <column name="USER_ID" valueNumeric="3"/>
@@ -292,8 +292,8 @@
             <column name="ROLE_ID" valueNumeric="2"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
             <column name="LAST_LOGIN"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:18.055669"/>
-            <column name="UPDATED_AT" valueDate="2026-02-26T11:31:18.055669"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:53.140789"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T11:41:53.140789"/>
         </insert>
         <insert tableName="USERS">
             <column name="USER_ID" valueNumeric="4"/>
@@ -305,12 +305,12 @@
             <column name="ROLE_ID" valueNumeric="3"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
             <column name="LAST_LOGIN"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:18.06387"/>
-            <column name="UPDATED_AT" valueDate="2026-02-26T11:31:18.06387"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:53.149068"/>
+            <column name="UPDATED_AT" valueDate="2026-02-26T11:41:53.149068"/>
         </insert>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-8">
+<changeSet author="ravinder (generated)" id="1772106180133-8">
         <insert tableName="PRODUCTS">
             <column name="PRODUCT_ID" valueNumeric="1"/>
             <column name="PRODUCT_NAME" value="Laptop Pro 15"/>
@@ -318,7 +318,7 @@
             <column name="PRICE" valueNumeric="1299.99"/>
             <column name="STOCK_QTY" valueNumeric="50"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:18.08097"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:53.170422"/>
         </insert>
         <insert tableName="PRODUCTS">
             <column name="PRODUCT_ID" valueNumeric="2"/>
@@ -327,7 +327,7 @@
             <column name="PRICE" valueNumeric="29.99"/>
             <column name="STOCK_QTY" valueNumeric="200"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:18.921232"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:53.178355"/>
         </insert>
         <insert tableName="PRODUCTS">
             <column name="PRODUCT_ID" valueNumeric="3"/>
@@ -336,7 +336,7 @@
             <column name="PRICE" valueNumeric="49.99"/>
             <column name="STOCK_QTY" valueNumeric="150"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:18.929467"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:53.184972"/>
         </insert>
         <insert tableName="PRODUCTS">
             <column name="PRODUCT_ID" valueNumeric="4"/>
@@ -345,11 +345,11 @@
             <column name="PRICE" valueNumeric="399.99"/>
             <column name="STOCK_QTY" valueNumeric="30"/>
             <column name="IS_ACTIVE" valueNumeric="1"/>
-            <column name="CREATED_AT" valueDate="2026-02-26T11:31:18.937066"/>
+            <column name="CREATED_AT" valueDate="2026-02-26T11:41:53.190796"/>
         </insert>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-2">
+<changeSet author="ravinder (generated)" id="1772106180133-2">
         <insert tableName="ORDERS">
             <column name="ORDER_ID" valueNumeric="1"/>
             <column name="USER_ID" valueNumeric="2"/>
@@ -357,7 +357,7 @@
             <column name="QUANTITY" valueNumeric="1"/>
             <column name="UNIT_PRICE" valueNumeric="1299.99"/>
                         <column name="STATUS" value="DELIVERED"/>
-            <column name="ORDER_DATE" valueDate="2026-02-26T11:31:19.112495"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T11:41:53.248886"/>
         </insert>
         <insert tableName="ORDERS">
             <column name="ORDER_ID" valueNumeric="2"/>
@@ -366,7 +366,7 @@
             <column name="QUANTITY" valueNumeric="2"/>
             <column name="UNIT_PRICE" valueNumeric="29.99"/>
                         <column name="STATUS" value="SHIPPED"/>
-            <column name="ORDER_DATE" valueDate="2026-02-26T11:31:19.134679"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T11:41:53.259034"/>
         </insert>
         <insert tableName="ORDERS">
             <column name="ORDER_ID" valueNumeric="3"/>
@@ -375,7 +375,7 @@
             <column name="QUANTITY" valueNumeric="1"/>
             <column name="UNIT_PRICE" valueNumeric="49.99"/>
                         <column name="STATUS" value="PENDING"/>
-            <column name="ORDER_DATE" valueDate="2026-02-26T11:31:19.144846"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T11:41:53.266591"/>
         </insert>
         <insert tableName="ORDERS">
             <column name="ORDER_ID" valueNumeric="4"/>
@@ -384,11 +384,11 @@
             <column name="QUANTITY" valueNumeric="2"/>
             <column name="UNIT_PRICE" valueNumeric="399.99"/>
                         <column name="STATUS" value="CONFIRMED"/>
-            <column name="ORDER_DATE" valueDate="2026-02-26T11:31:19.154439"/>
+            <column name="ORDER_DATE" valueDate="2026-02-26T11:41:53.275043"/>
         </insert>
     </changeSet>
 
-<changeSet author="ravinder (generated)" id="1772105538517-10">
+<changeSet author="ravinder (generated)" id="1772106180133-10">
         <insert tableName="AUDIT_LOG">
             <column name="LOG_ID" valueNumeric="1"/>
             <column name="TABLE_NAME" value="USERS"/>
@@ -397,7 +397,7 @@
             <column name="OLD_VALUES"/>
             <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;admin&quot;,&quot;email&quot;:&quot;admin@example.com&quot;,&quot;role_id&quot;:1}"/>
             <column name="CHANGED_BY" value="SYS"/>
-            <column name="CHANGED_AT" valueDate="2026-02-26T11:31:18.039221"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T11:41:53.122771"/>
         </insert>
         <insert tableName="AUDIT_LOG">
             <column name="LOG_ID" valueNumeric="2"/>
@@ -407,7 +407,7 @@
             <column name="OLD_VALUES"/>
             <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;jdoe&quot;,&quot;email&quot;:&quot;jdoe@example.com&quot;,&quot;role_id&quot;:2}"/>
             <column name="CHANGED_BY" value="SYS"/>
-            <column name="CHANGED_AT" valueDate="2026-02-26T11:31:18.048227"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T11:41:53.133484"/>
         </insert>
         <insert tableName="AUDIT_LOG">
             <column name="LOG_ID" valueNumeric="3"/>
@@ -417,7 +417,7 @@
             <column name="OLD_VALUES"/>
             <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;jsmith&quot;,&quot;email&quot;:&quot;jsmith@example.com&quot;,&quot;role_id&quot;:2}"/>
             <column name="CHANGED_BY" value="SYS"/>
-            <column name="CHANGED_AT" valueDate="2026-02-26T11:31:18.056977"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T11:41:53.141839"/>
         </insert>
         <insert tableName="AUDIT_LOG">
             <column name="LOG_ID" valueNumeric="4"/>
@@ -427,7 +427,7 @@
             <column name="OLD_VALUES"/>
             <column name="NEW_VALUES" value="{&quot;username&quot;:&quot;manager1&quot;,&quot;email&quot;:&quot;manager@example.com&quot;,&quot;role_id&quot;:3}"/>
             <column name="CHANGED_BY" value="SYS"/>
-            <column name="CHANGED_AT" valueDate="2026-02-26T11:31:18.064935"/>
+            <column name="CHANGED_AT" valueDate="2026-02-26T11:41:53.150115"/>
         </insert>
     </changeSet>
 
